@@ -1,0 +1,12 @@
+html
+  head
+    title Chat App
+  body
+    h1 Welcome to the Chat App.
+    p Let us know what name you'd like to go by.
+
+  form(method='POST' action='/user')
+    div.form-group
+      label(for='name') Enter your name:
+      input#name.form-control(type='text', placeholder='Eloise Reed...' name='name' value='')
+    button.btn.btn-primary(type='submit') Start Chatting!

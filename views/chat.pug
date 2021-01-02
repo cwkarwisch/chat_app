@@ -1,0 +1,16 @@
+html
+  head
+    title Chat App
+  body
+    h1 Hi #{name}!
+    p Go ahead and say something.
+
+    ul
+      each message in messageHistory
+        li= message
+
+  form(method='POST' action='/chat')
+    div.form-group
+      label(for='message') Chat:
+      input#name.form-control(type='text', placeholder="What's on your mind?" name='message' value='')
+    button.btn.btn-primary(type='submit') Post
