@@ -5,12 +5,25 @@ html
     h1 Hi #{name}!
     p Go ahead and say something.
 
-    ul
-      each message in messageHistory
-        li= message
+    ul(id='messages')
 
-  form(method='POST' action='/chat')
-    div.form-group
-      label(for='message') Chat:
-      input#name.form-control(type='text', placeholder="What's on your mind?" name='message' value='')
-    button.btn.btn-primary(type='submit') Post
+    form(method='POST' action='/chat')
+      div.form-group
+        label(for='message')
+        input#message.form-control(name='message', type='text', placeholder="What's on your mind?" value='')
+      button.btn.btn-primary(type='submit') Post
+
+    script(src='/socket.io/socket.io.js')
+    script(src='https://code.jquery.com/jquery-3.4.1.min.js')
+    script.
+      $(function () {
+        const socket = io();
+        $('form').submit(function(e) {
+          e.preventDefault();
+          socket.emit('chat message', $('#message').val());
+          $('#message').val(''); // clear text from input form
+        });
+        socket.on('chat message', function(message) {
+          $('#messages').append($('<li>').text(message));
+        });
+      });

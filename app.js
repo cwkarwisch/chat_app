@@ -8,6 +8,12 @@ app.set('view engine', 'pug')
 app.use(express.urlencoded())
 app.use(cookieSession({ secret: 'superdupersecret' }));
 
+const server = app.listen(port, () => {
+  console.log(`Chat app is listening on port ${port}`)
+})
+
+const io = require('socket.io')(server);
+
 // Home Page
 app.get('/', (req, res) => {
   res.redirect('/user')
@@ -15,8 +21,7 @@ app.get('/', (req, res) => {
 
 // Welcome Page
 app.get('/user', (req, res) => {
-  let name = 'cajuwi';
-  res.render('welcome', { name: name })
+  res.render('welcome')
 })
 
 // Save user's name
@@ -55,6 +60,23 @@ app.use(function (err, req, res, next) {
   res.status(500).send('Something broke!')
 })
 
-app.listen(port, () => {
-  console.log(`Chat app is listening at http://localhost:${port}`)
-})
+// Socket IO connection
+io.on('connection', (socket) => {
+  // Access session information
+  let cookieString = socket.request.headers.cookie;
+  let req = { headers : {cookie : cookieString} }
+  cookieSession({ keys: ['superdupersecret'] })(req, {}, function(){})
+
+  // Announce someone joined
+  io.emit('chat message', `${req.session.name} has joined the chat!`);
+
+  // Announce disconnection
+  socket.on('disconnect', () => {
+    io.emit('chat message', `${req.session.name} left the chat.`);
+  });
+
+  // Broadcast new message
+  socket.on('chat message', (message) => {
+    io.emit('chat message', `${req.session.name}: ${message}`);
+  });
+});
