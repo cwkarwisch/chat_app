@@ -1,18 +1,17 @@
 const express = require('express')
+const cookieSession = require('cookie-session')
+const socketio = require('socket.io')
+
 const app = express()
 const port = process.env.PORT || 3000
-const cookieSession = require('cookie-session');
+const server = app.listen(port)
+const io = socketio(server)
 
 app.set('views', './views')
 app.set('view engine', 'pug')
+
 app.use(express.urlencoded())
 app.use(cookieSession({ secret: 'superdupersecret' }));
-
-const server = app.listen(port, () => {
-  console.log(`Chat app is listening on port ${port}`)
-})
-
-const io = require('socket.io')(server);
 
 // Home Page
 app.get('/', (req, res) => {
@@ -63,20 +62,28 @@ app.use(function (err, req, res, next) {
 // Socket IO connection
 io.on('connection', (socket) => {
   // Access session information
-  let cookieString = socket.request.headers.cookie;
-  let req = { headers : {cookie : cookieString} }
-  cookieSession({ keys: ['superdupersecret'] })(req, {}, function(){})
+  const cookieString = socket.request.headers.cookie;
+  const req = { headers : {cookie : cookieString} }
+  cookieSession({ keys: ['superdupersecret'] })(req, {}, () => {})
 
   // Announce someone joined
-  io.emit('chat message', `${req.session.name} has joined the chat!`);
+  io.emit('chat message', `${name(req)} has joined the chat!`);
 
   // Announce disconnection
   socket.on('disconnect', () => {
-    io.emit('chat message', `${req.session.name} left the chat.`);
+    io.emit('chat message', `${name(req)} left the chat.`);
   });
 
   // Broadcast new message
   socket.on('chat message', (message) => {
-    io.emit('chat message', `${req.session.name}: ${message}`);
+    io.emit('chat message', `${name(req)}: ${message}`);
   });
 });
+
+function name(req) {
+  if (req.session && req.session.name) {
+    return req.session.name
+  } else {
+    return 'Someone'
+  }
+}
