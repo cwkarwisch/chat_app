@@ -1,9 +1,11 @@
 const express = require('express')
-const app = express()
 const cookieSession = require('cookie-session')
+const socketio = require('socket.io')
+
+const app = express()
 const port = process.env.PORT || 3000
-const server = app.listen(port);
-const io = require('socket.io')(server)
+const server = app.listen(port)
+const io = socketio(server)
 
 app.set('views', './views')
 app.set('view engine', 'pug')
